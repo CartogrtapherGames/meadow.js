@@ -21,33 +21,11 @@
  *
  */
 
-import {Container, Ticker} from "pixi.js";
+export class SaveManager {
 
-export interface IScene extends Container {
+  public static readonly MAX_SAVEFILE = 20;
 
-  isPaused: boolean;
-
-  preload(): Promise<void>;
-
-  create(): Promise<void>;
-
-  start(): Promise<void>;
-
-  pause(): Promise<void>;
-
-  resume(): Promise<void>;
-
-  resize?(): void;
-
-  update(ticker:Ticker): void;
-
-  terminate(): Promise<void>;
-
-  onLoad?(progress: number): void;
-
-  blur?(): void;
-  focus?(): void;
-  // the differences in between hide and terminate is that terminate unload all ressources
-  // while hide simply hide the scene without unloading its content.
-  hide?(): Promise<void>;
+  public static async save(){
+    //let request = await indexedDB.open("SaveManager");
+  }
 }

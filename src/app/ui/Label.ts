@@ -9,8 +9,8 @@ const defaultLabelStyle: Partial<TextStyleOptions> = {
 export type LabelOptions = typeof defaultLabelStyle;
 
 /**
- * A Text extension pre-formatted for this app, starting centred by default,
- * because it is the most common use in the app.
+ * A Text extension pre-formatted for this meadowEngine, starting centred by default,
+ * because it is the most common use in the meadowEngine.
  */
 export class Label extends Text {
   constructor(opts?: TextOptions) {

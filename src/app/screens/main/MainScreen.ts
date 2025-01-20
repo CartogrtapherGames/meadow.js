@@ -11,7 +11,7 @@ import { Button } from "../../ui/Button";
 
 import { Bouncer } from "./Bouncer";
 
-/** The screen that holds the app */
+/** The screen that holds the meadowEngine */
 export class MainScreen extends Container {
   /** Assets bundles required by this screen */
   public static assetBundles = ["main"];
@@ -154,7 +154,7 @@ export class MainScreen extends Container {
   /** Hide screen with animations */
   public async hide() {}
 
-  /** Auto pause the app when window go out of focus */
+  /** Auto pause the meadowEngine when window go out of focus */
   public blur() {
     if (!engine().navigation.currentPopup) {
       engine().navigation.presentPopup(PausePopup);

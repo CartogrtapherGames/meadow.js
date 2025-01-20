@@ -43,7 +43,7 @@ export class CreationEngine extends Application {
 
     // Append the application canvas to the document body
     document.getElementById("pixi-container")!.appendChild(this.canvas);
-    // Add a visibility listener, so the app can pause sounds and screens
+    // Add a visibility listener, so the meadowEngine can pause sounds and screens
     document.addEventListener("visibilitychange", this.visibilityChange);
 
     // Init PixiJS assets with this asset manifest

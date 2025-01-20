@@ -3,7 +3,7 @@ import { Assets, BigPool, Container } from "pixi.js";
 
 import type { CreationEngine } from "../engine";
 
-/** Interface for app screens */
+/** Interface for meadowEngine screens */
 export interface AppScreen extends Container {
   /** Show the screen */
   show?(): Promise<void>;
@@ -29,7 +29,7 @@ export interface AppScreen extends Container {
   onLoad?: (progress: number) => void;
 }
 
-/** Interface for app screens constructors */
+/** Interface for meadowEngine screens constructors */
 interface AppScreenConstructor {
   new (): AppScreen;
   /** List of assets bundles required by the screen */
@@ -117,7 +117,7 @@ export class Navigation {
       this.app.ticker.remove(screen.update, screen);
     }
 
-    // Remove screen from its parent (usually app.stage, if not changed)
+    // Remove screen from its parent (usually meadowEngine.stage, if not changed)
     if (screen.parent) {
       screen.parent.removeChild(screen);
     }

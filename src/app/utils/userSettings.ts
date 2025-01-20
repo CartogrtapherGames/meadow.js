@@ -1,5 +1,6 @@
 import { storage } from "../../engine/utils/storage";
-import { engine } from "../getEngine";
+
+import {meadowEngine} from "meadow.js";
 
 // Keys for saved items in storage
 const KEY_VOLUME_MASTER = "volume-master";
@@ -11,9 +12,10 @@ const KEY_VOLUME_SFX = "volume-sfx";
  */
 class UserSettings {
   public init() {
-    engine().audio.setMasterVolume(this.getMasterVolume());
-    engine().audio.bgm.setVolume(this.getBgmVolume());
-    engine().audio.sfx.setVolume(this.getSfxVolume());
+
+    meadowEngine().audio.setMasterVolume(this.getMasterVolume());
+    meadowEngine().audio.bgm.setVolume(this.getBgmVolume());
+    meadowEngine().audio.sfx.setVolume(this.getSfxVolume());
   }
 
   /** Get overall sound volume */
@@ -23,7 +25,7 @@ class UserSettings {
 
   /** Set overall sound volume */
   public setMasterVolume(value: number) {
-    engine().audio.setMasterVolume(value);
+    meadowEngine().audio.setMasterVolume(value);
     storage.setNumber(KEY_VOLUME_MASTER, value);
   }
 
@@ -34,7 +36,7 @@ class UserSettings {
 
   /** Set background music volume */
   public setBgmVolume(value: number) {
-    engine().audio.bgm.setVolume(value);
+    meadowEngine().audio.bgm.setVolume(value);
     storage.setNumber(KEY_VOLUME_BGM, value);
   }
 
@@ -45,7 +47,7 @@ class UserSettings {
 
   /** Set sound effects volume */
   public setSfxVolume(value: number) {
-    engine().audio.sfx.setVolume(value);
+    meadowEngine().audio.sfx.setVolume(value);
     storage.setNumber(KEY_VOLUME_SFX, value);
   }
 }

@@ -21,4 +21,80 @@
  *
  */
 
+import manifest from "../../manifest.json"; // fix that later
+import {Assets} from "pixi.js";
+import {SceneManager} from "meadow.js";
+
+/**
+ * The middleware class that handle the boilerplate of the AssetManager.
+ * it also ensure proper typing safety and such. It also allow to create an
+ * queue system which allow to bulk preload assets and keep all their references to unload them
+ * when needed.
+ */
+export class AssetManager {
+
+  public static root: string = "assets";
+
+  public static preloadAssets: string[] = [];
+
+  private static _queue: string[] = []
+
+  public static async init(){
+    await Assets.init({ manifest, basePath: "assets" });
+    await this.preload();
+  }
+
+  public static async preload(){
+    await Assets.loadBundle(this.preloadAssets);
+    const allBundles = manifest.bundles.map(item => item.name);
+    Assets.backgroundLoadBundle(allBundles);
+  }
+
+  public static schedulePreloadBundles(...bundles: string[]){
+    this.preloadAssets.push(...bundles);
+  }
+  /**
+   * Allow to queue the loading of assets on the fly if needed.
+   * it is similar to ```Assets.add``` but its differences is that
+   * it is added to an array and is automatically loaded after preload is done.
+   * @param alias
+   * @param url
+   */
+  public static queue(alias: string, url: string){
+    const src = this.root + "/" + url;
+    this._queue.push(alias);
+    Assets.add({alias,src});
+  }
+
+  public static get<T>(alias: string): T{
+    return Assets.get(alias) as T;
+  }
+
+  public static async load(): Promise<void> {
+    await Assets.load(this._queue, (progress) => {
+      if(SceneManager.currentScene?.onLoad){
+        SceneManager.currentScene.onLoad(progress * 100);
+      }
+    });
+  }
+
+  // we request an unloading of the queue
+  public static async unload(): Promise<void> {
+    await Assets.unload(this._queue);
+    this._queue = [];
+  }
+
+  public static async loadBundle(bundle: string): Promise<void> {
+    await Assets.loadBundle(bundle, (progress) => {
+      if(SceneManager.currentScene?.onLoad){
+        SceneManager.currentScene.onLoad(progress * 100);
+      }
+    });
+  }
+
+  public static async unloadBundle(bundle: string): Promise<void> {
+    await Assets.unloadBundle(bundle);
+  }
+}
+
 

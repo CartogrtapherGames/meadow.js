@@ -11,24 +11,25 @@ export abstract class SceneBase extends Container implements IScene {
     this.isPaused = false;
   }
 
-  preload(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async preload(): Promise<void> {
+    console.log("preload");
   }
 
-  create(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async create(): Promise<void> {
+    console.log("create");
   }
 
-  start(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async start(): Promise<void> {
+    console.log("start");
   }
 
-  pause(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async pause(): Promise<void> {
+    console.log("pause");
   }
 
-  resume(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async resume(): Promise<void> {
+    console.log("resume");
+    this.isPaused = false;
   }
 
   resize?(): void {
@@ -36,11 +37,13 @@ export abstract class SceneBase extends Container implements IScene {
   }
 
   update(): void {
-    throw new Error("Method not implemented.");
+    console.log("update");
   }
 
-  terminate?(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async terminate(): Promise<void> {
+    for (const child of this.children) {
+      child.destroy({children: true});
+    }
   }
 
   hide?(): Promise<void> {
