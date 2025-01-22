@@ -18,6 +18,8 @@
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,

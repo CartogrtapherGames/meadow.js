@@ -1,6 +1,6 @@
 
 import {userSettings} from "./app/utils/userSettings";
-import {MeadowEngine, SceneManager, setEngine} from "meadow.js";
+import {Button, MeadowEngine, MouseButton, MouseInput, SceneManager, setEngine} from "meadow.js";
 
 /**
  * Importing these modules will automatically register there plugins with the engine.
@@ -38,10 +38,12 @@ setEngine(engine);
   await initDevtools({app: engine});
 })();
 
+const mouse = new MouseInput();
+mouse.addButton( new Button("left",MouseButton.LEFT));
 //=====================================================================================
 
 // @ts-ignore
-let isMousePressed = false;
+
 class SceneLoading extends SceneBase {
 
   // @ts-ignore
@@ -74,7 +76,7 @@ class SceneLoading extends SceneBase {
 
   public override update() {
     super.update();
-    if(isMousePressed){
+    if(mouse.isPressed(mouse.get("left"))){
       SceneManager.push(SceneTest);
     }
   }
@@ -106,23 +108,6 @@ class SceneTest extends SceneBase {
     }
 }
 
-
-
-// Event listener for mouse down
-document.addEventListener("mousedown", (event) => {
-  if (event.button === 0) { // 0 indicates the left mouse button
-    isMousePressed = true;
-    console.log("Mouse is pressed!");
-  }
-});
-
-// Event listener for mouse up
-document.addEventListener("mouseup", (event) => {
-  if (event.button === 0) {
-    isMousePressed = false;
-    console.log("Mouse is released!");
-  }
-});
 
 // Check the value of isMousePressed as needed
 
