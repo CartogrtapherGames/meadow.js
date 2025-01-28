@@ -23,6 +23,8 @@
 
 import {EventEmitter} from "pixi.js";
 import {Button, Key} from "meadow.js";
+import {KeyboardKey} from "./Key.ts";
+import {ControllerButton, GamepadButtons} from "./ControllerButton.ts";
 
 type BindingType = GamepadButtons | KeyboardKey | MouseButton;
 
@@ -33,26 +35,78 @@ export class Input extends EventEmitter {
   private _inputMap: Map<string, AbstractKeyBinding[]>;
   private _playerIndex: number;
 
+  private keydownHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
+  private keyupHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
+
   constructor(playerIndex: number = 0) {
     super();
     this._inputMap = new Map();
     this._playerIndex = playerIndex;
+
+    this.keydownHandler = (event: KeyboardEvent): void => this.onKeyDown(event);
+    this.keyupHandler = (event: KeyboardEvent): void => this.onKeyUp(event);
+    window.addEventListener('keydown', this.keydownHandler);
+    window.addEventListener('keyup', this.keyupHandler);
   }
 
 
   public bindAction(action: string, ...bindings: BindingType[]) {
     let bindingList: AbstractKeyBinding[] = [];
     for (let binding of bindings) {
-      if(binding in KeyboardKey)
+      if (binding in KeyboardKey)
         bindingList.push(this._bindKeyboardInput(binding as KeyboardKey));
 
-      if(binding in MouseButton){
+      if (binding in MouseButton) {
         bindingList.push(this._bindMouseInput(binding as MouseButton));
       }
-      if(binding in GamepadButtons){}
+      if (binding in GamepadButtons) {
+        bindingList.push(this._bindGamepadInput(binding as GamepadButtons));
+      }
     }
     this._inputMap.set(action, bindingList);
   }
+
+  public unbindAction(action: string) {
+    this._inputMap.delete(action);
+  }
+
+  public unbindKey(action: string, binding: BindingType) {
+    let act = this._inputMap.get(action);
+    if (act) {
+      let index = act.findIndex(b => b.keycode == binding);
+      if (index != -1)
+        act.splice(index, 1);
+    }
+  }
+
+  public isPressed(action: string): boolean {
+    if (!this._inputMap.has(action)) throw Error("Action not found");
+    const input = this._inputMap.get(action);
+    return input.some((e) => e.obj.isDown);
+  }
+
+  public isReleased(action: string): boolean {
+    if (!this._inputMap.has(action)) throw Error("Action not found");
+    const input = this._inputMap.get(action);
+    return input.some((e) => e.obj.isUp);
+  }
+
+
+  public clear(){
+    for(let binding of this._inputMap.values()){
+      for(let b of binding){
+        b.obj.clear();
+      }
+    }
+    this.emit("clear");
+  }
+
+  public destroy(){
+    window.removeEventListener('keydown', this.keydownHandler);
+    window.removeEventListener('keyup', this.keyupHandler);
+    this.clear();
+  }
+
 
   private _bindKeyboardInput(binding: KeyboardKey): AbstractKeyBinding {
     let key = binding as keyof typeof KeyboardKey;
@@ -66,52 +120,68 @@ export class Input extends EventEmitter {
 
   private _bindMouseInput(binding: MouseButton): AbstractKeyBinding {
 
-      let key = MouseButton[binding] as keyof typeof MouseButton;
-      let obj = new Button(binding.toString(),MouseButton[key]);
-      return {
-        inputType: "mouse",
-        keycode: MouseButton[key],
-        obj: obj
-      }
+    let key = MouseButton[binding] as keyof typeof MouseButton;
+    let obj = new Button(binding.toString(), MouseButton[key]);
+    return {
+      inputType: "mouse",
+      keycode: MouseButton[key],
+      obj: obj
+    }
   }
 
-  private  _bindGamepadInput(binding: GamepadButtons): AbstractKeyBinding {
-    let key = GamepadButtons[binding] as keyof typeof  GamepadButtons;
-    let obj = new ControllerButton(binding.toString(),GamepadButtons[key]);
+  // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
+  // global
+  private _bindGamepadInput(binding: GamepadButtons): AbstractKeyBinding {
+    let key = GamepadButtons[binding] as keyof typeof GamepadButtons;
+    let obj = new ControllerButton(GamepadButtons[key]);
     return {
       inputType: "gamepad",
       keycode: GamepadButtons[key],
       obj: obj
     }
   }
+
+  private onKeyDown(event: KeyboardEvent) {
+    for (let binding of this._inputMap.values()) {
+      let obj;
+      let key = binding.find(b => {
+        if (event.key == KeyboardKey[b.keycode as keyof typeof KeyboardKey]) {
+          return b;
+        }
+      });
+      if (!key) continue;
+      if (key.obj)
+        obj = key.obj as Key;
+        obj.isDown = true;
+        this.emit("keydown", key);
+        break;
+    }
+  }
+
+  private onKeyUp(event:KeyboardEvent){
+    for(let binding of this._inputMap.values()){
+      let obj;
+      let key = binding.find(b => {
+        if (event.key == KeyboardKey[b.keycode as keyof typeof KeyboardKey]) {
+          return b;
+        }
+      });
+      if (!key) continue;
+      if (key.obj)
+        obj = key.obj as Key;
+        obj.isUp = false;
+        this.emit("keyup", key);
+        break;
+    }
+  }
 }
 
 interface AbstractKeyBinding {
   inputType: "keyboard" | "mouse" | "gamepad";
-  keycode : GamepadButtons | KeyboardKey | MouseButton;
-  obj : Key | Button | GamepadButton;
+  keycode: GamepadButtons | KeyboardKey | MouseButton;
+  obj: Key | Button | ControllerButton;
 }
 
-// Enum for Gamepad Buttons
-enum GamepadButtons {
-  A = 0,            // Bottom button (e.g., Xbox 'A', PlayStation 'Cross')
-  B = 1,            // Right button (e.g., Xbox 'B', PlayStation 'Circle')
-  X = 2,            // Left button (e.g., Xbox 'X', PlayStation 'Square')
-  Y = 3,            // Top button (e.g., Xbox 'Y', PlayStation 'Triangle')
-  LeftBumper = 4,   // Left shoulder button (LB / L1)
-  RightBumper = 5,  // Right shoulder button (RB / R1)
-  LeftTrigger = 6,  // Left trigger (LT / L2)
-  RightTrigger = 7, // Right trigger (RT / R2)
-  Back = 8,         // Back/View button
-  Start = 9,        // Start/Menu button
-  LeftStick = 10,   // Left stick clickable
-  RightStick = 11,  // Right stick clickable
-  DPadUp = 12,      // D-pad up
-  DPadDown = 13,    // D-pad down
-  DPadLeft = 14,    // D-pad left
-  DPadRight = 15,   // D-pad right
-  Home = 16         // Center (e.g., XBox 'Guide', PlayStation 'Home')
-}
 
 export enum MouseButton {
   LEFT = 0,
@@ -120,128 +190,3 @@ export enum MouseButton {
 }
 
 
-/**
- * Enum representing all standard keyboard keys based on the 2024 standard.
- */
-export enum KeyboardKey {
-  // Alphanumeric Keys
-  A = "a",
-  B = "b",
-  C = "c",
-  D = "d",
-  E = "e",
-  F = "f",
-  G = "g",
-  H = "h",
-  I = "i",
-  J = "j",
-  K = "k",
-  L = "l",
-  M = "m",
-  N = "n",
-  O = "o",
-  P = "p",
-  Q = "q",
-  R = "r",
-  S = "s",
-  T = "t",
-  U = "u",
-  V = "v",
-  W = "w",
-  X = "x",
-  Y = "y",
-  Z = "z",
-
-  Digit0 = "0",
-  Digit1 = "1",
-  Digit2 = "2",
-  Digit3 = "3",
-  Digit4 = "4",
-  Digit5 = "5",
-  Digit6 = "6",
-  Digit7 = "7",
-  Digit8 = "8",
-  Digit9 = "9",
-
-  // Punctuation and Symbols
-  Backquote = "`",
-  Minus = "-",
-  Equal = "=",
-  BracketLeft = "[",
-  BracketRight = "]",
-  Backslash = "\\",
-  Semicolon = ";",
-  Quote = "'",
-  Comma = ",",
-  Period = ".",
-  Slash = "/",
-
-  // Special Keys
-  Escape = "Escape",
-  Tab = "Tab",
-  CapsLock = "CapsLock",
-  ShiftLeft = "Shift",
-  ShiftRight = "Shift",
-  ControlLeft = "Control",
-  ControlRight = "Control",
-  AltLeft = "Alt",
-  AltRight = "Alt",
-  MetaLeft = "Meta",
-  MetaRight = "Meta",
-  Space = " ",
-  Enter = "Enter",
-  Backspace = "Backspace",
-
-  // Arrow Keys
-  ArrowUp = "ArrowUp",
-  ArrowDown = "ArrowDown",
-  ArrowLeft = "ArrowLeft",
-  ArrowRight = "ArrowRight",
-
-  // Navigation Keys
-  Insert = "Insert",
-  Delete = "Delete",
-  Home = "Home",
-  End = "End",
-  PageUp = "PageUp",
-  PageDown = "PageDown",
-
-  // Function Keys
-  F1 = "F1",
-  F2 = "F2",
-  F3 = "F3",
-  F4 = "F4",
-  F5 = "F5",
-  F6 = "F6",
-  F7 = "F7",
-  F8 = "F8",
-  F9 = "F9",
-  F10 = "F10",
-  F11 = "F11",
-  F12 = "F12",
-
-  // Additional Keys
-  NumLock = "NumLock",
-  ScrollLock = "ScrollLock",
-  Pause = "Pause",
-  PrintScreen = "PrintScreen",
-  ContextMenu = "ContextMenu",
-
-  // Numpad Keys
-  Numpad0 = "0",
-  Numpad1 = "1",
-  Numpad2 = "2",
-  Numpad3 = "3",
-  Numpad4 = "4",
-  Numpad5 = "5",
-  Numpad6 = "6",
-  Numpad7 = "7",
-  Numpad8 = "8",
-  Numpad9 = "9",
-  NumpadAdd = "+",
-  NumpadSubtract = "-",
-  NumpadMultiply = "*",
-  NumpadDivide = "/",
-  NumpadDecimal = ".",
-  NumpadEnter = "Enter",
-}
