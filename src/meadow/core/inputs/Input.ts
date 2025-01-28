@@ -88,7 +88,8 @@ export class Input extends EventEmitter {
   public isReleased(action: string): boolean {
     if (!this._inputMap.has(action)) throw Error("Action not found");
     const input = this._inputMap.get(action);
-    return input.some((e) => e.obj.isUp);
+    // important here to make sure that
+    return input.every((e) => e.obj.isUp);
   }
 
 
