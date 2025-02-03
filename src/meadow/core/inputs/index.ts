@@ -23,6 +23,6 @@
 
 export * from "./MouseInput.ts";
 export * from "./Button.ts";
-export * from "./_OldInput.ts";
+export * from "./MouseInput.ts";
 export * from "./Key.ts";
 

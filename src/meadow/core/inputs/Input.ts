@@ -33,6 +33,10 @@ export class Input extends EventEmitter {
   public static readonly shared = new Input();
 
   private _inputMap: Map<string, AbstractKeyBinding[]>;
+  /**
+   * @deprecated
+   * @private
+   */
   private _playerIndex: number;
 
   private keydownHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };

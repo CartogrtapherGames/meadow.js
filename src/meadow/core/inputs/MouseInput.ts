@@ -1,4 +1,4 @@
-/*
+/**
  *
  *  Copyright (c) 2025 Nio Kasgami. All rights reserved.
  *
@@ -21,184 +21,128 @@
  *
  */
 
-import {EventEmitter, Point} from "pixi.js";
-import {Button} from "./Button.ts";
+import {EventEmitter} from "pixi.js";
+import {Key} from "./Key.ts";
 
 /**
- * the class that handle mouse movement and interactions
- * @todo maybe include touch input for mobile devices
- * @extends EventEmitter
+ * The class that handle keyboard input.
  */
-export class MouseInput extends EventEmitter {
+export class mouseInput extends EventEmitter {
 
-  public static readonly shared = new MouseInput();
+  public static readonly shared = new mouseInput();
 
-  private readonly _registry: Map<string, Button>;
+  private _registry: Map<string,Key>;
 
-  private mousedownHandler: { (event: MouseEvent): void; (this: Window, ev: MouseEvent): void };
-  private mouseupHandler: { (event: MouseEvent): void; (this: Window, ev: MouseEvent): void };
-  private mousemoveHandler: { (event: MouseEvent): void; (this: Window, ev: MouseEvent): void }
-  private mousewheelHandler: { (event: WheelEvent): void; (this: Window, ev: WheelEvent): void }
+  private keydownHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
 
-  public realTransform: Point = new Point();
-  public transform: Point = new Point();
-  public wheelTransform: Point = new Point();
+  private keyupHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
 
 
   constructor() {
     super();
-    this._registry = new Map();
     this.setupEvents();
   }
 
-  private setupEvents() {
-    this.mousedownHandler = (event: MouseEvent): void => this.onMouseDown(event);
-    this.mouseupHandler = (event: MouseEvent): void => this.onMouseUp(event);
-    this.mousemoveHandler = (event: MouseEvent): void => this.onMouseMove(event);
-    this.mousewheelHandler = (event: WheelEvent): void => this.onMouseWheel(event);
-    window.addEventListener('mousedown', this.mousedownHandler);
-    window.addEventListener('mouseup', this.mouseupHandler);
-    window.addEventListener('mousemove', this.mousemoveHandler)
-    window.addEventListener('wheel', this.mousewheelHandler);
+  /**
+   * setup the keyboards events
+   * @private
+   */
+  private setupEvents(){
+    this.keydownHandler = (event: KeyboardEvent): void => this.onKeyDown(event);
+    this.keyupHandler = (event: KeyboardEvent): void => this.onKeyUp(event);
+    window.addEventListener('keydown', this.keydownHandler);
+    window.addEventListener('keyup', this.keyupHandler);
   }
 
-  public addButton(button: Button): void {
-    this._registry.set(button.name, button);
+  /**
+   * will register a new key input to the registry
+   * @param {Key} key - the key to register
+   */
+  public addKey(key: Key){
+    this._registry.set(key.name, key);
   }
 
-  public get(name: string): Button {
-    if( !this._registry.has(name))
-      throw new Error(`Button ${name} does not exist`);
-    return this._registry.get(name);
-  }
-  public buttons(): Map<string, Button> {
+  /**
+   * return the list of registered keyboard input
+   * @returns {Map<string,Key>}
+   */
+  public keys():Map<string,Key>{
     return this._registry;
   }
 
-  public has(name: string): boolean {
+  /**
+   * return if the button is already registered
+   * @param name - the button name
+   * @returns {boolean}
+   */
+  public has(name:string): boolean{
     return this._registry.has(name);
   }
 
   /**
-   * the function that is called when a button is pressed down
-   * @param {MouseEvent} event - the mouse event to catch
+   * the function that is called when a key is pressed
+   * @param {KeyboardEvent} event - the keyboard event to catch
    * @private
    */
-  private onMouseDown(event: MouseEvent): void {
-    const buttonName = this.fetchButtonName(event.button);
-    if (this._registry.has(buttonName)) {
-      const button = this._registry.get(buttonName);
-      button.down(event);
-      this.emit('mousedown', button);
+  private onKeyDown(event: KeyboardEvent): void {
+    if (this._registry.has(event.key)) {
+      const key = this._registry.get(event.key);
+      key.down(event);
+      this.emit('keydown', key);
     }
   }
 
   /**
-   * the function that is called when a button is released
-   * @param {MouseEvent} event - the mouse event to catch
-   * @private
+   * the function that is called when a key is released
+   * @param {KeyboardEvent} event - the keyboard event to catch
    */
-  private onMouseUp(event: MouseEvent): void {
-    const buttonName = this.fetchButtonName(event.button);
-    if (this._registry.has(buttonName)) {
-      const button = this._registry.get(buttonName);
-      button.up(event);
-      this.emit('mouseup', button);
+  private onKeyUp(event: KeyboardEvent): void {
+    if (this._registry.has(event.key)) {
+      const key = this._registry.get(event.key);
+      key.up(event);
+      this.emit('keyup', key);
     }
   }
 
   /**
-   * the function that is called when the mouse is moving
-   * @param {MouseEvent} event - the mouse event to catch
-   * @private
-   */
-  private onMouseMove(event: MouseEvent): void {
-    this.transform.x = event.clientX;
-    this.transform.y = event.clientY;
-    this.realTransform.x = event.pageX;
-    this.realTransform.y = event.pageY;
-    this.emit('mousemove');
-  }
-
-  /**
-   * the function that is called when the scroll wheel is used
-   * @param {WheelEvent} event - the wheel event to catch
-   * @private
-   */
-  private onMouseWheel(event: WheelEvent): void {
-    event.preventDefault();
-    this.wheelTransform.x = event.deltaX;
-    this.wheelTransform.y = event.deltaY;
-    this.emit('wheel');
-  }
-
-  /**
-   * return wether the button is enabled or not
-   * @param {Button} button - the button to check its state
+   * return wether the key is pressed or not
+   * @param {string} key - the key to check its state
    * @returns {boolean}
    */
-  public isEnabled(button: Button): boolean {
-    if (this._registry.has(button.name)) {
-      return button.isEnabled;
+  public isPressed(key: string): boolean {
+    if (this._registry.has(key)) {
+      return this._registry.get(key).isDown;
     }
     return false;
   }
 
   /**
-   * return wether the button is pressed or not
-   * @param {Button} button - the button to check its state
-   * @returns {boolean}
+   * return whether the key is released or not
+   * @param {string} key - the key to check its state
+   * @returns
    */
-  public isPressed(button: Button): boolean {
-    if (this._registry.has(button.name)) {
-      return button.isDown;
+  public isReleased(key: string): boolean {
+    if (this._registry.has(key)) {
+      return this._registry.get(key).isUp;
     }
     return false;
   }
 
   /**
-   * return wether the button is released or not
-   * @param {Button} button - the button to check its state
-   * @returns {boolean}
+   * clear all data from the registered mouseInput key
    */
-  public isReleased(button: Button): boolean {
-    if (this._registry.has(button.name)) {
-      return button.isDown;
-    }
-    return false;
-  }
-
-  /**
-   * clear all the registered data for the mouse buttons.
-   */
-  public clear() {
-    this._registry.forEach((button) => button.clear());
+  public clear(): void {
+    this._registry.forEach((key) => key.clear());
     this.emit('clear');
   }
 
   /**
    * destroy the mouse event listener
    */
-  public destroy() {
-    window.removeEventListener('mousedown', this.mousedownHandler);
-    window.removeEventListener('mouseup', this.mouseupHandler);
-    window.removeEventListener('mousemove', this.mousemoveHandler);
-    window.removeEventListener('wheel', this.mousewheelHandler);
+  public destroy(): void {
+    window.removeEventListener('keydown', this.keydownHandler);
+    window.removeEventListener('keyup', this.keyupHandler);
+    this.clear();
   }
-
-  /**
-   * return the button name based on it's id
-   * @param {number} id - the button id
-   * @private
-   * @returns {string}
-   */
-  private fetchButtonName(id: number): string {
-    for (const [key, button] of this._registry.entries()) {
-      if (button.id === id) {
-        return key;
-      }
-    }
-    return null;
-  }
-
 }
+
