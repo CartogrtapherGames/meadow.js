@@ -1,6 +1,6 @@
 
 import {userSettings} from "./app/utils/userSettings";
-import {Button, MeadowEngine, MouseButton, MouseInput, SceneManager, setEngine} from "meadow.js";
+import {Button, MeadowEngine, MouseButton, SceneManager, setEngine} from "meadow.js";
 
 /**
  * Importing these modules will automatically register there plugins with the engine.
@@ -37,9 +37,6 @@ setEngine(engine);
 
   await initDevtools({app: engine});
 })();
-
-const mouse = new MouseInput();
-mouse.addButton( new Button("left",MouseButton.LEFT));
 //=====================================================================================
 
 // @ts-ignore

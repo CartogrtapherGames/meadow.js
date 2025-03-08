@@ -41,7 +41,13 @@ export abstract class GameObject extends Container {
   private _components: IComponent[] = []; // allow us to get a fast checkup for update etc.
   private _componentsMap: Map<string, IComponent> = new Map(); // allow for fast lookup and references.
 
-  public active: boolean = this.visible;
+  public get active(): boolean {
+    return this.visible;
+  }
+
+  public set active(value: boolean) {
+    this.visible = value;
+  }
 
   constructor() {
     super();
