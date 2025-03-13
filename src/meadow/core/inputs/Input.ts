@@ -22,11 +22,14 @@
  */
 
 import {EventEmitter} from "pixi.js";
-import {Button, Key} from "meadow.js";
-import {KeyboardKey} from "./Key.ts";
-import {ControllerButton, GamepadButtons} from "./ControllerButton.ts";
+import { MouseButtonState } from "meadow.js";
+import { MouseButton } from "./MouseButton.ts";
+import { GamepadButton } from "./GamepadButton.ts";
+import { KeyboardKey } from "./KeyboardKey.ts";
+import { KeyState } from "./KeyState.ts";
+import { GamepadButtonState } from "./GamepadButtonState.ts";
 
-type BindingType = GamepadButtons | KeyboardKey | MouseButton;
+type BindingType = GamepadButton | KeyboardKey | MouseButton;
 
 export class Input extends EventEmitter {
 
@@ -63,8 +66,8 @@ export class Input extends EventEmitter {
       if (binding in MouseButton) {
         bindingList.push(this._bindMouseInput(binding as MouseButton));
       }
-      if (binding in GamepadButtons) {
-        bindingList.push(this._bindGamepadInput(binding as GamepadButtons));
+      if (binding in GamepadButton) {
+        bindingList.push(this._bindGamepadInput(binding as GamepadButton));
       }
     }
     this._inputMap.set(action, bindingList);
@@ -115,7 +118,7 @@ export class Input extends EventEmitter {
 
   private _bindKeyboardInput(binding: KeyboardKey): AbstractKeyBinding {
     let key = binding as keyof typeof KeyboardKey;
-    let bindingObj = new Key(KeyboardKey[key]);
+    let bindingObj = new KeyState(KeyboardKey[key]);
     return {
       inputType: "keyboard",
       keycode: KeyboardKey[key],
@@ -126,7 +129,7 @@ export class Input extends EventEmitter {
   private _bindMouseInput(binding: MouseButton): AbstractKeyBinding {
 
     let key = MouseButton[binding] as keyof typeof MouseButton;
-    let obj = new Button(binding.toString(), MouseButton[key]);
+    let obj = new MouseButtonState(binding.toString(), MouseButton[key]);
     return {
       inputType: "mouse",
       keycode: MouseButton[key],
@@ -136,12 +139,12 @@ export class Input extends EventEmitter {
 
   // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
   // global
-  private _bindGamepadInput(binding: GamepadButtons): AbstractKeyBinding {
-    let key = GamepadButtons[binding] as keyof typeof GamepadButtons;
-    let obj = new ControllerButton(GamepadButtons[key]);
+  private _bindGamepadInput(binding: GamepadButton): AbstractKeyBinding {
+    let key = GamepadButton[binding] as keyof typeof GamepadButton;
+    let obj = new GamepadButtonState(GamepadButton[key]);
     return {
       inputType: "gamepad",
-      keycode: GamepadButtons[key],
+      keycode: GamepadButton[key],
       obj: obj
     }
   }
@@ -156,7 +159,7 @@ export class Input extends EventEmitter {
       });
       if (!key) continue;
       if (key.obj)
-        obj = key.obj as Key;
+        obj = key.obj as KeyState;
         obj.isDown = true;
         this.emit("keydown", key);
         break;
@@ -173,7 +176,7 @@ export class Input extends EventEmitter {
       });
       if (!key) continue;
       if (key.obj)
-        obj = key.obj as Key;
+        obj = key.obj as KeyState;
         obj.isUp = false;
         this.emit("keyup", key);
         break;
@@ -183,15 +186,7 @@ export class Input extends EventEmitter {
 
 interface AbstractKeyBinding {
   inputType: "keyboard" | "mouse" | "gamepad";
-  keycode: GamepadButtons | KeyboardKey | MouseButton;
-  obj: Key | Button | ControllerButton;
+  keycode: GamepadButton | KeyboardKey | MouseButton;
+  obj: KeyState | MouseButtonState | GamepadButtonState;
 }
-
-
-export enum MouseButton {
-  LEFT = 0,
-  MIDDLE = 1,
-  RIGHT = 2
-}
-
 

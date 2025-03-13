@@ -22,7 +22,7 @@
  */
 
 import {EventEmitter} from "pixi.js";
-import {Key} from "./Key.ts";
+import {Key} from "./KeyState.ts";
 
 /**
  * The class that handle keyboard input.

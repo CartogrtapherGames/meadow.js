@@ -22,22 +22,12 @@
  */
 
 /**
- * The default button mapping of a standard mouse
- * @enum
- */
-export enum MouseButton {
-  LEFT = 0,
-  MIDDLE = 1,
-  RIGHT = 2
-}
-
-/**
  * the class that shape the state of a mouse button
  * contrary to the keyboard, mouse button are integer based.
  * In this case we both have a name and a id to the button.
  * the name being an alias while the id is the true integer value
  */
-export class Button {
+export class MouseButtonState {
 
   /**
    * the button real id.
