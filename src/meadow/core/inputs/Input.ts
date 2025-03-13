@@ -42,6 +42,8 @@ export class Input extends EventEmitter {
    */
   private _playerIndex: number;
 
+  private mouseUpHandler: { (event: MouseEvent): void; (this: Window, ev: MouseEvent): void };
+  private mouseDownHandler: { (event: MouseEvent): void; (this: Window, ev: MouseEvent): void };
   private keydownHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
   private keyupHandler: { (event: KeyboardEvent): void; (this: Window, ev: KeyboardEvent): void };
 
@@ -50,8 +52,12 @@ export class Input extends EventEmitter {
     this._inputMap = new Map();
     this._playerIndex = playerIndex;
 
+    this.mouseUpHandler = (event: MouseEvent): void => this.onMouseUp(event);
+    this.mouseDownHandler = (event: MouseEvent): void => this.onMouseDown(event);
     this.keydownHandler = (event: KeyboardEvent): void => this.onKeyDown(event);
     this.keyupHandler = (event: KeyboardEvent): void => this.onKeyUp(event);
+    window.addEventListener('mouseup', this.mouseUpHandler);
+    window.addEventListener('mousedown', this.mouseDownHandler);
     window.addEventListener('keydown', this.keydownHandler);
     window.addEventListener('keyup', this.keyupHandler);
   }
@@ -134,6 +140,44 @@ export class Input extends EventEmitter {
       inputType: "mouse",
       keycode: MouseButton[key],
       obj: obj
+    }
+  }
+
+  private onMouseUp(event: MouseEvent) {
+    for (let binding of this._inputMap.values()) {
+      let obj;
+      let key = binding.find(b => {
+        if (b.inputType !== "mouse") return;
+        if (event.button == b.keycode) {
+          return b;
+        }
+      });
+      if (!key) continue;
+      if (key.obj)
+        obj = key.obj as MouseButtonState;
+        obj.isUp = true;
+        obj.isDown = false;
+        this.emit("mouseup", key);
+        break;
+    }
+  }
+  
+  private onMouseDown(event: MouseEvent) {
+    for (let binding of this._inputMap.values()) {
+      let obj;
+      let key = binding.find(b => {
+        if (b.inputType !== "mouse") return;
+        if (event.button == b.keycode) {
+          return b;
+        }
+      });
+      if (!key) continue;
+      if (key.obj)
+        obj = key.obj as MouseButtonState;
+        obj.isDown = true;
+        obj.isUp = false;
+        this.emit("mousedown", key);
+        break;
     }
   }
 
