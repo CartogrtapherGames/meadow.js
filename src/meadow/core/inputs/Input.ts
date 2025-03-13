@@ -28,6 +28,7 @@ import { GamepadButton } from "./GamepadButton.ts";
 import { KeyboardKey } from "./KeyboardKey.ts";
 import { KeyState } from "./KeyState.ts";
 import { GamepadButtonState } from "./GamepadButtonState.ts";
+import { getEnumKeyByValue } from "meadow/utils/getEnumKeyByValue.ts";
 
 type BindingType = GamepadButton | KeyboardKey | MouseButton;
 
@@ -62,12 +63,12 @@ export class Input extends EventEmitter {
     window.addEventListener('keyup', this.keyupHandler);
   }
 
-
   public bindAction(action: string, ...bindings: BindingType[]) {
     let bindingList: AbstractKeyBinding[] = [];
     for (let binding of bindings) {
-      if (binding in KeyboardKey)
-        bindingList.push(this._bindKeyboardInput(binding as KeyboardKey));
+      if (getEnumKeyByValue(KeyboardKey, binding as KeyboardKey)) {
+        bindingList.push(this._bindKeyboardInput(getEnumKeyByValue(KeyboardKey, binding as KeyboardKey) as KeyboardKey));
+      }
 
       if (binding in MouseButton) {
         bindingList.push(this._bindMouseInput(binding as MouseButton));
@@ -197,7 +198,7 @@ export class Input extends EventEmitter {
     for (let binding of this._inputMap.values()) {
       let obj;
       let key = binding.find(b => {
-        if (event.key == KeyboardKey[b.keycode as keyof typeof KeyboardKey]) {
+        if (event.key == b.keycode) {
           return b;
         }
       });
@@ -205,6 +206,7 @@ export class Input extends EventEmitter {
       if (key.obj)
         obj = key.obj as KeyState;
         obj.isDown = true;
+        obj.isUp = false;
         this.emit("keydown", key);
         break;
     }
@@ -214,14 +216,15 @@ export class Input extends EventEmitter {
     for(let binding of this._inputMap.values()){
       let obj;
       let key = binding.find(b => {
-        if (event.key == KeyboardKey[b.keycode as keyof typeof KeyboardKey]) {
+        if (event.key == b.keycode) {
           return b;
         }
       });
       if (!key) continue;
       if (key.obj)
         obj = key.obj as KeyState;
-        obj.isUp = false;
+        obj.isUp = true;
+        obj.isDown = false;
         this.emit("keyup", key);
         break;
     }
