@@ -67,7 +67,7 @@ export class Input extends EventEmitter {
     let bindingList: AbstractKeyBinding[] = [];
     for (let binding of bindings) {
       if (getEnumKeyByValue(KeyboardKey, binding as KeyboardKey)) {
-        bindingList.push(this._bindKeyboardInput(getEnumKeyByValue(KeyboardKey, binding as KeyboardKey) as KeyboardKey));
+        bindingList.push(this._bindKeyboardInput(binding as KeyboardKey));
       }
 
       if (binding in MouseButton) {
@@ -122,26 +122,20 @@ export class Input extends EventEmitter {
     this.clear();
   }
 
+  private _createBinding<T extends KeyState | MouseButtonState | GamepadButtonState>(
+    inputType: "keyboard" | "mouse" | "gamepad",
+    key: KeyboardKey | MouseButton | GamepadButton,
+    obj: T
+  ): AbstractKeyBinding {
+    return { inputType, keycode: key, obj };
+  }
 
   private _bindKeyboardInput(binding: KeyboardKey): AbstractKeyBinding {
-    let key = binding as keyof typeof KeyboardKey;
-    let bindingObj = new KeyState(KeyboardKey[key]);
-    return {
-      inputType: "keyboard",
-      keycode: KeyboardKey[key],
-      obj: bindingObj
-    };
+    return this._createBinding('keyboard', binding, new KeyState(binding));
   }
 
   private _bindMouseInput(binding: MouseButton): AbstractKeyBinding {
-
-    let key = MouseButton[binding] as keyof typeof MouseButton;
-    let obj = new MouseButtonState(binding.toString(), MouseButton[key]);
-    return {
-      inputType: "mouse",
-      keycode: MouseButton[key],
-      obj: obj
-    }
+    return this._createBinding('mouse', binding, new MouseButtonState(binding.toString(), binding));
   }
 
   private onMouseUp(event: MouseEvent) {
@@ -185,13 +179,7 @@ export class Input extends EventEmitter {
   // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
   // global
   private _bindGamepadInput(binding: GamepadButton): AbstractKeyBinding {
-    let key = GamepadButton[binding] as keyof typeof GamepadButton;
-    let obj = new GamepadButtonState(GamepadButton[key]);
-    return {
-      inputType: "gamepad",
-      keycode: GamepadButton[key],
-      obj: obj
-    }
+    return this._createBinding('gamepad', binding, new GamepadButtonState(binding));
   }
 
   private onKeyDown(event: KeyboardEvent) {
