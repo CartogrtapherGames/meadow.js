@@ -36,7 +36,7 @@ export class Input extends EventEmitter {
 
   public static readonly shared = new Input();
 
-  private _inputMap: Map<string, AbstractKeyBinding[]>;
+  private _inputMap: Map<string, InputBinding[]>;
   /**
    * @deprecated
    * @private
@@ -64,7 +64,7 @@ export class Input extends EventEmitter {
   }
 
   public bindAction(action: string, ...bindings: BindingType[]) {
-    let bindingList: AbstractKeyBinding[] = [];
+    let bindingList: InputBinding[] = [];
     for (let binding of bindings) {
       if (getEnumKeyByValue(KeyboardKey, binding as KeyboardKey)) {
         bindingList.push(this._bindKeyboardInput(binding as KeyboardKey));
@@ -96,21 +96,21 @@ export class Input extends EventEmitter {
   public isPressed(action: string): boolean {
     if (!this._inputMap.has(action)) throw Error("Action not found");
     const input = this._inputMap.get(action);
-    return input.some((e) => e.obj.isDown);
+    return input.some((e) => e.state.isDown);
   }
 
   public isReleased(action: string): boolean {
     if (!this._inputMap.has(action)) throw Error("Action not found");
     const input = this._inputMap.get(action);
     // important here to make sure that
-    return input.every((e) => e.obj.isUp);
+    return input.every((e) => e.state.isUp);
   }
 
 
   public clear(){
     for(let binding of this._inputMap.values()){
       for(let b of binding){
-        b.obj.clear();
+        b.state.clear();
       }
     }
     this.emit("clear");
@@ -125,16 +125,16 @@ export class Input extends EventEmitter {
   private _createBinding<T extends KeyState | MouseButtonState | GamepadButtonState>(
     inputType: "keyboard" | "mouse" | "gamepad",
     key: KeyboardKey | MouseButton | GamepadButton,
-    obj: T
-  ): AbstractKeyBinding {
-    return { inputType, keycode: key, obj };
+    state: T
+  ): InputBinding {
+    return { inputType, keycode: key, state };
   }
 
-  private _bindKeyboardInput(binding: KeyboardKey): AbstractKeyBinding {
+  private _bindKeyboardInput(binding: KeyboardKey): InputBinding {
     return this._createBinding('keyboard', binding, new KeyState(binding));
   }
 
-  private _bindMouseInput(binding: MouseButton): AbstractKeyBinding {
+  private _bindMouseInput(binding: MouseButton): InputBinding {
     return this._createBinding('mouse', binding, new MouseButtonState(binding.toString(), binding));
   }
 
@@ -148,8 +148,8 @@ export class Input extends EventEmitter {
         }
       });
       if (!key) continue;
-      if (key.obj)
-        obj = key.obj as MouseButtonState;
+      if (key.state)
+        obj = key.state as MouseButtonState;
         obj.isUp = true;
         obj.isDown = false;
         this.emit("mouseup", key);
@@ -167,8 +167,8 @@ export class Input extends EventEmitter {
         }
       });
       if (!key) continue;
-      if (key.obj)
-        obj = key.obj as MouseButtonState;
+      if (key.state)
+        obj = key.state as MouseButtonState;
         obj.isDown = true;
         obj.isUp = false;
         this.emit("mousedown", key);
@@ -178,7 +178,7 @@ export class Input extends EventEmitter {
 
   // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
   // global
-  private _bindGamepadInput(binding: GamepadButton): AbstractKeyBinding {
+  private _bindGamepadInput(binding: GamepadButton): InputBinding {
     return this._createBinding('gamepad', binding, new GamepadButtonState(binding));
   }
 
@@ -191,8 +191,8 @@ export class Input extends EventEmitter {
         }
       });
       if (!key) continue;
-      if (key.obj)
-        obj = key.obj as KeyState;
+      if (key.state)
+        obj = key.state as KeyState;
         obj.isDown = true;
         obj.isUp = false;
         this.emit("keydown", key);
@@ -209,8 +209,8 @@ export class Input extends EventEmitter {
         }
       });
       if (!key) continue;
-      if (key.obj)
-        obj = key.obj as KeyState;
+      if (key.state)
+        obj = key.state as KeyState;
         obj.isUp = true;
         obj.isDown = false;
         this.emit("keyup", key);
@@ -219,9 +219,9 @@ export class Input extends EventEmitter {
   }
 }
 
-interface AbstractKeyBinding {
+interface InputBinding {
   inputType: "keyboard" | "mouse" | "gamepad";
   keycode: GamepadButton | KeyboardKey | MouseButton;
-  obj: KeyState | MouseButtonState | GamepadButtonState;
+  state: KeyState | MouseButtonState | GamepadButtonState;
 }
 
