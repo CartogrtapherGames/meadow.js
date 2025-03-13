@@ -27,6 +27,5 @@ export * from "./GamepadButton.ts";
 export * from "./GamepadButtonState.ts";
 export * from "./MouseButton.ts";
 export * from "./MouseButtonState.ts";
-export * from "./MouseInput.ts";
 export * from "./Input.ts";
 
