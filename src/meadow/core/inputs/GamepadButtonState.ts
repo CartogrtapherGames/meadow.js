@@ -21,6 +21,8 @@
  *
  */
 
+import { GamepadButton } from "./GamepadButton";
+
 export class GamepadButtonState {
 
   /**
@@ -70,8 +72,8 @@ export class GamepadButtonState {
    */
   public timeUp: number = 0;
 
-  constructor(button: GamepadButtons) {
-    this.name = GamepadButtons[button].toString();
+  constructor(button: GamepadButton) {
+    this.name = GamepadButton[button].toString();
     this.id = button;
   }
 

@@ -21,6 +21,8 @@
  *
  */
 
+import { KeyboardKey } from "./KeyboardKey";
+
 export class KeyState {
 
   public name: string;
