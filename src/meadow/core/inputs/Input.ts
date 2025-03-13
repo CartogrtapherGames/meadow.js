@@ -138,84 +138,50 @@ export class Input extends EventEmitter {
     return this._createBinding('mouse', binding, new MouseButtonState(binding.toString(), binding));
   }
 
-  private onMouseUp(event: MouseEvent) {
-    for (let binding of this._inputMap.values()) {
-      let obj;
-      let key = binding.find(b => {
-        if (b.inputType !== "mouse") return;
-        if (event.button == b.keycode) {
-          return b;
-        }
-      });
-      if (!key) continue;
-      if (key.state)
-        obj = key.state as MouseButtonState;
-        obj.isUp = true;
-        obj.isDown = false;
-        this.emit("mouseup", key);
-        break;
-    }
-  }
-  
-  private onMouseDown(event: MouseEvent) {
-    for (let binding of this._inputMap.values()) {
-      let obj;
-      let key = binding.find(b => {
-        if (b.inputType !== "mouse") return;
-        if (event.button == b.keycode) {
-          return b;
-        }
-      });
-      if (!key) continue;
-      if (key.state)
-        obj = key.state as MouseButtonState;
-        obj.isDown = true;
-        obj.isUp = false;
-        this.emit("mousedown", key);
-        break;
-    }
-  }
-
-  // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
+    // TODO : make  the controllerButton. Also we have no choice to name it controller since the standard gamepad class is
   // global
   private _bindGamepadInput(binding: GamepadButton): InputBinding {
     return this._createBinding('gamepad', binding, new GamepadButtonState(binding));
   }
 
-  private onKeyDown(event: KeyboardEvent) {
+  private handleInputEvent<T extends KeyboardEvent | MouseEvent>(
+    event: T,
+    eventType: "keydown" | "keyup" | "mousedown" | "mouseup",
+    isDown: boolean,
+    isUp: boolean
+  ) {
     for (let binding of this._inputMap.values()) {
-      let obj;
       let key = binding.find(b => {
-        if (event.key == b.keycode) {
-          return b;
+        if (event instanceof KeyboardEvent) {
+          return event.key === b.keycode;
+        } else if (event instanceof MouseEvent) {
+          return b.inputType === "mouse" && event.button === b.keycode;
         }
       });
-      if (!key) continue;
-      if (key.state)
-        obj = key.state as KeyState;
-        obj.isDown = true;
-        obj.isUp = false;
-        this.emit("keydown", key);
-        break;
+  
+      if (!key || !key.state) continue;
+  
+      key.state.isDown = isDown;
+      key.state.isUp = isUp;
+      this.emit(eventType, key);
+      break;
     }
   }
 
-  private onKeyUp(event:KeyboardEvent){
-    for(let binding of this._inputMap.values()){
-      let obj;
-      let key = binding.find(b => {
-        if (event.key == b.keycode) {
-          return b;
-        }
-      });
-      if (!key) continue;
-      if (key.state)
-        obj = key.state as KeyState;
-        obj.isUp = true;
-        obj.isDown = false;
-        this.emit("keyup", key);
-        break;
-    }
+  private onKeyDown(event: KeyboardEvent) {
+    this.handleInputEvent(event, "keydown", true, false);
+  }
+  
+  private onKeyUp(event: KeyboardEvent) {
+    this.handleInputEvent(event, "keyup", false, true);
+  }
+  
+  private onMouseDown(event: MouseEvent) {
+    this.handleInputEvent(event, "mousedown", true, false);
+  }
+  
+  private onMouseUp(event: MouseEvent) {
+    this.handleInputEvent(event, "mouseup", false, true);
   }
 }
 
